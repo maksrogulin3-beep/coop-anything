@@ -112,3 +112,29 @@ See local/notes-made-in-abyss.md (private). Summary:
   shipped in pak.
 - Optional: re-run remaining C++ tool suites now that Build Tools is installed.
 
+## 2026-10-25 Stage 1 session 4 notes (script compilation and network surface)
+
+### Checked
+- A deliberately invalid `CoopBootstrap.as` produced the game's own Angelscript compile
+  diagnostic at startup. This proves the patch pak's `.as` source is discovered and compiled.
+- The diagnostic was removed by deleting the test pak; a clean game launch was then verified.
+- Valid source overrides of `ScenarioActor.as` and `ASEventLevelActor.as` compiled without the
+  diagnostic, but their `BeginPlay` probes were not displayed in a live map. This is consistent
+  with the map's pre-baked Blueprint/generated classes not being replaced merely by a source file
+  with the same script name. Do not claim source override execution from this test.
+- `Binds.Cache` contains real bindings for `Gameplay::SaveGameToSlot`, `UGameplayStatics`,
+  `NewObject`, `UMIAGameInstance::GetGameInstance`, and the game's custom classes.
+- `Binds.Cache` contains Steam session callback proxies (`CreateSession`, `FindSessions`,
+  `JoinSession`, `DestroySession`) and `USteamNetDriver`; bindings also expose `SetReplicates`
+  and `SetReplicateMovement`.
+- `DefaultEngine.ini` selects `BP_MIAGameInstance` and `BP_AbyssPlayerController`, but no explicit
+  `GameNetDriver`/Steam net-driver definition was found in the extracted config. This indicates
+  Steam networking is packaged but not enabled for normal single-player startup; verify before
+  building the session layer.
+
+### Current decision
+- Stop random `.as` source probes. The next implementation target is the real network/config path:
+  Steam session discovery, net-driver configuration, then a replicated second pawn. Existing
+  Blueprint assets/classes must be treated as the authoritative spawn path.
+- No experimental pak is currently installed in the owner's game directory.
+
